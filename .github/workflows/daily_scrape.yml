@@ -1,0 +1,51 @@
+name: "🍷 Daily Price Scrape"
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      TARGET_SITE_URL: ${{ secrets.TARGET_SITE_URL }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install playwright pandas openpyxl
+          playwright install chromium
+          playwright install-deps
+
+      - name: Run scraper
+        run: python vino_scraper.py --output both --append
+
+      - name: Generate auth file for dashboard
+        run: |
+          mkdir -p docs/output
+          echo '${{ secrets.AUTH_USERS }}' > docs/auth.json
+
+      - name: Copy storico to docs for GitHub Pages
+        run: |
+          cp output/vino_prezzi_storico.csv docs/output/vino_prezzi_storico.csv
+
+      - name: Commit results
+        run: |
+          git config user.name "Wine Price Bot"
+          git config user.email "bot@example.com"
+          git add output/ docs/output/ docs/auth.json
+          DATE=$(date +%Y-%m-%d)
+          git diff --staged --quiet || git commit -m "🍷 Prezzi $DATE"
+          git pull --rebase origin main
+          git push

@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+<meta name="googlebot" content="noindex, nofollow">
+<title>Price Monitor · Portfolio Argea</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--wine:#6b1d3a;--wine-lt:#8b2d52;--wine-dk:#4a1228;--cream:#f9f6f1;--parch:#f0ebe3;--ink:#1e1812;--gold:#c9a84c;--slate:#8a7e72;--border:#e2dbd2;--red:#c0392b;--green:#4a7c59;--radius:10px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh}
+.login-overlay{position:fixed;inset:0;background:linear-gradient(135deg,var(--wine-dk),var(--wine) 40%,var(--wine-lt));display:flex;align-items:center;justify-content:center;z-index:9999}
+.login-box{background:#fff;border-radius:16px;padding:48px 40px;width:380px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.login-box h2{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;text-align:center;margin-bottom:4px}
+.login-box .subtitle{text-align:center;font-size:12px;color:var(--slate);margin-bottom:28px}
+.login-box label{font-size:11px;font-weight:600;color:var(--slate);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:5px}
+.login-box input{width:100%;padding:11px 14px;border-radius:8px;border:1px solid var(--border);font-size:14px;font-family:inherit;outline:none;margin-bottom:16px}
+.login-box input:focus{border-color:var(--wine);box-shadow:0 0 0 3px rgba(107,29,58,.1)}
+.login-btn{width:100%;padding:12px;border-radius:8px;border:none;background:var(--wine);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .2s}
+.login-btn:hover{background:var(--wine-lt)}
+.login-error{color:var(--red);font-size:12px;text-align:center;margin-top:12px;min-height:18px}
+.login-icon{text-align:center;font-size:36px;margin-bottom:12px}
+.cpw-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:10000}
+.cpw-box{background:#fff;border-radius:14px;padding:32px;width:360px;max-width:90vw}
+.cpw-box h3{font-family:'Cormorant Garamond',serif;font-size:18px;margin-bottom:16px}
+.cpw-box input{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);font-size:13px;font-family:inherit;outline:none;margin-bottom:12px}
+.cpw-actions{display:flex;gap:10px;margin-top:4px}
+.cpw-msg{font-size:12px;margin-top:8px;min-height:16px}
+.hdr{background:linear-gradient(135deg,var(--wine-dk),var(--wine) 40%,var(--wine-lt));color:var(--cream);padding:24px 32px;position:relative;overflow:hidden}
+.hdr::after{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23fff' fill-opacity='.03'%3E%3Cpath d='M20 20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4z'/%3E%3C/g%3E%3C/svg%3E");pointer-events:none}
+.hdr-in{max-width:1400px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;position:relative;z-index:1}
+.hdr h1{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700}
+.hdr h1 span{color:var(--gold)}
+.hdr-meta{font-size:10px;opacity:.5;letter-spacing:1.5px;text-transform:uppercase;margin-top:3px}
+.hdr-right{display:flex;align-items:center;gap:12px}
+.tabs{display:flex;gap:4px}
+.tabs button{padding:7px 16px;border-radius:6px;border:1px solid rgba(255,255,255,.15);background:transparent;color:rgba(255,255,255,.5);font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .2s}
+.tabs button.on{background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)}
+.user-menu{position:relative}
+.user-btn{padding:6px 14px;border-radius:6px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);font-size:11px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px}
+.user-btn:hover{background:rgba(255,255,255,.15)}
+.user-dd{position:absolute;top:100%;right:0;margin-top:6px;background:#fff;border-radius:8px;border:1px solid var(--border);box-shadow:0 8px 24px rgba(0,0,0,.12);min-width:180px;display:none;z-index:100}
+.user-dd.show{display:block}
+.user-dd button{display:block;width:100%;padding:10px 16px;border:none;background:none;text-align:left;font-size:12px;cursor:pointer;font-family:inherit;color:var(--ink)}
+.user-dd button:hover{background:var(--parch)}
+.user-dd button:first-child{border-radius:8px 8px 0 0}
+.user-dd button:last-child{border-radius:0 0 8px 8px;color:var(--red)}
+.main{max-width:1400px;margin:0 auto;padding:24px 32px}
+.ld{text-align:center;padding:80px 20px;color:var(--slate);font-size:13px}
+.ld .sp{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--wine);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fu{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.kpi-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:24px}
+.kpi{background:#fff;border-radius:var(--radius);padding:18px 22px;border:1px solid var(--border);position:relative;overflow:hidden;animation:fu .4s ease both}
+.kpi:nth-child(2){animation-delay:.05s}.kpi:nth-child(3){animation-delay:.1s}.kpi:nth-child(4){animation-delay:.15s}
+.kpi::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%}
+.kpi:nth-child(1)::before{background:var(--wine)}.kpi:nth-child(2)::before{background:var(--green)}
+.kpi:nth-child(3)::before{background:var(--red)}.kpi:nth-child(4)::before{background:var(--gold)}
+.kpi-lb{font-size:10px;text-transform:uppercase;letter-spacing:1.1px;color:var(--slate);font-weight:600;margin-bottom:6px}
+.kpi-v{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700}
+.kpi-s{font-size:11px;color:var(--slate);margin-top:3px}
+.card{background:#fff;border-radius:var(--radius);border:1px solid var(--border);padding:24px;margin-bottom:20px;animation:fu .4s ease both}
+.stitle{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;margin-bottom:14px}
+.brand-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin-bottom:10px}
+.bc{padding:14px 18px;border-radius:10px;border:1px solid var(--border);background:#fff;display:flex;align-items:center;gap:12px}
+.bc-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.bc-name{font-weight:600;font-size:13px}
+.bc-info{font-size:11px;color:var(--slate);margin-top:2px}
+.bc-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:16px;margin-left:auto;white-space:nowrap}
+.date-chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:5px 14px;border-radius:16px;font-size:11px;font-weight:500;border:1px solid var(--border);background:#fff;cursor:pointer;transition:all .2s}
+.chip.on{background:var(--wine);color:#fff;border-color:var(--wine)}
+.flt{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.sb{position:relative;flex:1 1 220px}
+.sb input{width:100%;padding:9px 12px 9px 34px;border-radius:8px;border:1px solid var(--border);font-size:13px;background:#fff;font-family:inherit;outline:none}
+.sb input:focus{border-color:var(--wine-lt);box-shadow:0 0 0 3px rgba(107,29,58,.07)}
+.sb svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--slate)}
+select{padding:9px 12px;border-radius:8px;border:1px solid var(--border);font-size:13px;background:#fff;font-family:inherit;cursor:pointer;outline:none}
+.btn{padding:9px 18px;border-radius:8px;border:1px solid var(--border);background:#fff;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;transition:all .2s}
+.btn:hover{background:var(--parch)}
+.ml-a{margin-left:auto}
+.cnt{font-size:11px;color:var(--slate);margin-bottom:10px}
+.tw{background:#fff;border-radius:var(--radius);border:1px solid var(--border);overflow-x:auto;animation:fu .4s ease .15s both}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead tr{border-bottom:2px solid var(--border)}
+th{padding:11px 14px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--slate);font-weight:600;white-space:nowrap;cursor:pointer;user-select:none}
+th:hover{color:var(--ink)}
+td{padding:9px 14px}
+tbody tr{border-bottom:1px solid #f0ece7;transition:background .1s}
+tbody tr:hover{background:#faf7f4}
+.brand-dot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:6px}
+.brand-name{font-size:11px;font-weight:600;white-space:nowrap}
+.prod-link{color:var(--ink);text-decoration:none;border-bottom:1px dotted #ccc}
+.prod-link:hover{border-color:var(--wine)}
+.price{font-variant-numeric:tabular-nums}
+.price-sale{font-weight:600}.price-disc{color:var(--red)}
+.badge{font-size:10px;font-weight:600;padding:2px 9px;border-radius:16px;white-space:nowrap}
+.badge-promo{color:var(--red);background:rgba(192,57,43,.08)}
+.badge-full{color:#aaa}
+.ann{color:var(--slate);font-size:12px}
+.empty{padding:40px;text-align:center;color:#aaa;font-size:13px}
+.chart-controls{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.chart-wrap{position:relative;height:380px;margin-bottom:8px}
+.chart-note{font-size:11px;color:var(--slate);text-align:center}
+.bm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin-bottom:20px}
+.bm-card{padding:14px 18px;border-radius:10px;border:1px solid var(--border);background:#fff;display:flex;align-items:center;gap:10px}
+.bm-card.active{border-color:var(--green);background:rgba(74,124,89,.03)}
+.bm-card.inactive{border-color:var(--border);opacity:.6}
+.bm-status{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.bm-status.on{background:var(--green)}.bm-status.off{background:#ccc}
+.bm-details{flex:1;min-width:0}
+.bm-name{font-weight:600;font-size:13px}
+.bm-count{font-size:11px;color:var(--slate);margin-top:2px}
+@media(max-width:768px){.hdr{padding:16px 18px}.main{padding:16px 18px}.kpi-g{grid-template-columns:1fr 1fr}.flt{flex-direction:column}.sb{flex:1 1 100%}.chart-wrap{height:280px}.login-box{padding:32px 24px}}
+</style>
+</head>
+<body>
+
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <div class="login-icon">🍷</div>
+    <h2>Price Monitor</h2>
+    <div class="subtitle">Accesso riservato · Portfolio Argea</div>
+    <label>Email</label>
+    <input type="email" id="loginEmail" placeholder="nome@argea.com" autocomplete="email">
+    <label>Password</label>
+    <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">Accedi</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<div class="cpw-overlay" id="cpwOverlay">
+  <div class="cpw-box">
+    <h3>Cambia password</h3>
+    <label style="font-size:11px;font-weight:600;color:var(--slate);display:block;margin-bottom:4px">Password attuale</label>
+    <input type="password" id="cpwOld" placeholder="Password attuale">
+    <label style="font-size:11px;font-weight:600;color:var(--slate);display:block;margin-bottom:4px">Nuova password</label>
+    <input type="password" id="cpwNew" placeholder="Nuova password">
+    <label style="font-size:11px;font-weight:600;color:var(--slate);display:block;margin-bottom:4px">Conferma nuova password</label>
+    <input type="password" id="cpwConfirm" placeholder="Conferma" onkeydown="if(event.key==='Enter')doChangePassword()">
+    <div class="cpw-actions">
+      <button class="btn" style="background:var(--wine);color:#fff;border-color:var(--wine)" onclick="doChangePassword()">Salva</button>
+      <button class="btn" onclick="closeCpw()">Annulla</button>
+    </div>
+    <div class="cpw-msg" id="cpwMsg"></div>
+  </div>
+</div>
+
+<div id="appWrap" style="display:none">
+<div class="hdr"><div class="hdr-in">
+  <div>
+    <h1>🍷 <span>Price Monitor</span></h1>
+    <div class="hdr-meta" id="headerMeta">Caricamento dati...</div>
+  </div>
+  <div class="hdr-right">
+    <div class="tabs" id="tabBar">
+      <button class="on" onclick="setView('dashboard',this)">Dashboard</button>
+      <button onclick="setView('chart',this)">📈 Andamento</button>
+      <button onclick="setView('table',this)">Dati</button>
+      <button onclick="setView('brands',this)">⚙ Brand</button>
+    </div>
+    <div class="user-menu">
+      <button class="user-btn" onclick="toggleUserMenu()" id="userBtn">👤 <span id="userName"></span> ▾</button>
+      <div class="user-dd" id="userDd">
+        <button onclick="openCpw()">🔑 Cambia password</button>
+        <button onclick="doLogout()">Esci</button>
+      </div>
+    </div>
+  </div>
+</div></div>
+<div class="main">
+  <div id="loading" class="ld"><div class="sp"></div>Caricamento dati...</div>
+  <div id="app" style="display:none">
+    <div id="viewDashboard">
+      <div class="kpi-g" id="kpiGrid"></div>
+      <div class="card"><h3 class="stitle">Riepilogo per Brand</h3><div class="brand-g" id="brandGrid"></div></div>
+      <div class="card"><h3 class="stitle">Rilevazioni disponibili</h3><div class="date-chips" id="dateChips"></div></div>
+    </div>
+    <div id="viewChart" style="display:none">
+      <div class="card">
+        <h3 class="stitle">📈 Andamento Prezzi nel Tempo</h3>
+        <div class="chart-controls">
+          <select id="chartBrand" onchange="onChartBrandChange()"><option value="">Seleziona un brand...</option></select>
+          <select id="chartProduct" onchange="renderChart()"><option value="">Tutti i prodotti</option></select>
+          <select id="chartMetric" onchange="renderChart()">
+            <option value="sale">Prezzo di vendita</option>
+            <option value="orig">Prezzo originale</option>
+            <option value="disc">% Sconto</option>
+          </select>
+        </div>
+        <div class="chart-wrap"><canvas id="priceChart"></canvas></div>
+        <div class="chart-note" id="chartNote">Seleziona un brand per visualizzare l'andamento dei prezzi</div>
+      </div>
+      <div class="card" id="chartSummaryCard" style="display:none"><h3 class="stitle">Riepilogo prodotto</h3><div id="chartSummary"></div></div>
+    </div>
+    <div id="viewTable" style="display:none">
+      <div class="flt">
+        <div class="sb">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="search" placeholder="Cerca prodotto o brand..." oninput="renderTable()">
+        </div>
+        <select id="brandFilter" onchange="renderTable()"><option value="">Tutti i brand</option></select>
+        <select id="dateFilter" onchange="renderTable()"><option value="">Tutte le date</option></select>
+        <button class="btn ml-a" onclick="exportCSV()">⬇ Esporta CSV</button>
+      </div>
+      <div class="cnt" id="resultCount"></div>
+      <div class="tw"><table><thead><tr>
+        <th onclick="sortBy('Brand')">Brand</th><th onclick="sortBy('Nome vino')">Prodotto</th><th onclick="sortBy('Annata')">Annata</th><th>Formato</th>
+        <th onclick="sortBy('Prezzo originale €')">Prezzo orig.</th><th onclick="sortBy('Prezzo scontato €')">Prezzo scont.</th><th onclick="sortBy('Sconto %')">Sconto</th><th onclick="sortBy('Data rilevazione')">Data</th>
+      </tr></thead><tbody id="tableBody"></tbody></table></div>
+    </div>
+    <div id="viewBrands" style="display:none">
+      <div class="card">
+        <h3 class="stitle">⚙ Gestione Brand Monitorati</h3>
+        <p style="font-size:12px;color:var(--slate);margin-bottom:16px;line-height:1.6">Stato attuale dei brand configurati nello scraper.</p>
+        <div class="bm-grid" id="brandManager"></div>
+        <div style="margin-top:20px;padding:20px;background:var(--parch);border-radius:10px">
+          <h4 style="font-size:13px;font-weight:600;margin-bottom:10px">💡 Come aggiungere un nuovo brand</h4>
+          <div style="font-size:12px;color:var(--slate);line-height:1.8">
+            <strong>1.</strong> Cerca il brand sull'e-commerce. Nota lo slug dall'URL: <code>/produttore/<b>nome-brand</b></code><br>
+            <strong>2.</strong> Apri <code>vino_scraper.py</code> e aggiungi in <code>BRAND_CONFIG</code>:<br>
+            <pre style="background:#fff;padding:12px 16px;border-radius:8px;margin:8px 0;font-size:12px;overflow-x:auto;border:1px solid var(--border)">"NOME BRAND": { "slugs": ["nome-brand"] },</pre>
+            <strong>3.</strong> Per sub-brand:<br>
+            <pre style="background:#fff;padding:12px 16px;border-radius:8px;margin:8px 0;font-size:12px;overflow-x:auto;border:1px solid var(--border)">"SUB-BRAND": { "slugs": [], "sub_brand": True, "parent": "padre", "filter": r"(?i)nome" },</pre>
+            <strong>4.</strong> Committa, pusha, poi: <b>Actions → Run workflow</b>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+// ════════════════════════════════════════
+// AUTH - Hash-based, no plaintext credentials in code
+// Users loaded from auth.json (generated by GitHub Action from Secret)
+// ════════════════════════════════════════
+const SALT = 'argea-pm-2026';
+let AUTH_USERS = null;
+
+async function sha256hex(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('').substring(0,16);
+}
+
+async function loadAuthUsers() {
+  try {
+    const r = await fetch('auth.json');
+    if (r.ok) { AUTH_USERS = await r.json(); return; }
+  } catch(e) {}
+  // Fallback: nessun auth.json trovato, nessuno può accedere
+  AUTH_USERS = {};
+}
+
+async function doLogin() {
+  if (!AUTH_USERS) await loadAuthUsers();
+  const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+  const password = document.getElementById('loginPassword').value;
+  const err = document.getElementById('loginError');
+  if (!email || !password) { err.textContent = 'Inserisci email e password'; return; }
+
+  const emailHash = await sha256hex(email + SALT);
+  const pwdHash = await sha256hex(password + SALT);
+
+  // Check custom password first (stored locally)
+  const customPwds = JSON.parse(localStorage.getItem('pm_custom_pwd') || '{}');
+  const storedPwd = customPwds[emailHash] || AUTH_USERS[emailHash];
+
+  if (!storedPwd) { err.textContent = 'Utente non autorizzato'; return; }
+  if (storedPwd !== pwdHash) { err.textContent = 'Password errata'; return; }
+
+  sessionStorage.setItem('pm_session', email);
+  sessionStorage.setItem('pm_session_hash', emailHash);
+  showApp(email);
+}
+
+function doLogout() { sessionStorage.removeItem('pm_session'); sessionStorage.removeItem('pm_session_hash'); location.reload(); }
+
+async function checkSession() {
+  await loadAuthUsers();
+  const session = sessionStorage.getItem('pm_session');
+  if (session) {
+    const emailHash = await sha256hex(session + SALT);
+    const customPwds = JSON.parse(localStorage.getItem('pm_custom_pwd') || '{}');
+    if (AUTH_USERS[emailHash] || customPwds[emailHash]) { showApp(session); return; }
+  }
+  document.getElementById('loginOverlay').style.display = 'flex';
+  document.getElementById('appWrap').style.display = 'none';
+}
+
+function showApp(email) {
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('appWrap').style.display = '';
+  const name = email.split('@')[0].split('.').map(s=>s.charAt(0).toUpperCase()+s.slice(1)).join(' ');
+  document.getElementById('userName').textContent = name;
+  loadData();
+}
+
+function toggleUserMenu() { document.getElementById('userDd').classList.toggle('show'); }
+document.addEventListener('click', e => { if (!e.target.closest('.user-menu')) document.getElementById('userDd')?.classList.remove('show'); });
+
+function openCpw() { document.getElementById('userDd').classList.remove('show'); document.getElementById('cpwOverlay').style.display='flex'; document.getElementById('cpwOld').value=''; document.getElementById('cpwNew').value=''; document.getElementById('cpwConfirm').value=''; document.getElementById('cpwMsg').textContent=''; }
+function closeCpw() { document.getElementById('cpwOverlay').style.display='none'; }
+
+async function doChangePassword() {
+  const emailHash = sessionStorage.getItem('pm_session_hash');
+  const old = document.getElementById('cpwOld').value;
+  const newp = document.getElementById('cpwNew').value;
+  const conf = document.getElementById('cpwConfirm').value;
+  const msg = document.getElementById('cpwMsg');
+  const oldHash = await sha256hex(old + SALT);
+  const customPwds = JSON.parse(localStorage.getItem('pm_custom_pwd') || '{}');
+  const currentPwd = customPwds[emailHash] || AUTH_USERS[emailHash];
+  if (currentPwd !== oldHash) { msg.style.color='var(--red)'; msg.textContent='Password attuale errata'; return; }
+  if (newp.length < 6) { msg.style.color='var(--red)'; msg.textContent='Minimo 6 caratteri'; return; }
+  if (newp !== conf) { msg.style.color='var(--red)'; msg.textContent='Le password non corrispondono'; return; }
+  const newHash = await sha256hex(newp + SALT);
+  customPwds[emailHash] = newHash;
+  localStorage.setItem('pm_custom_pwd', JSON.stringify(customPwds));
+  msg.style.color='var(--green)'; msg.textContent='✓ Password aggiornata';
+  setTimeout(closeCpw, 1500);
+}
+
+// ════════════════════════════════════════
+// DATA & UI (identical logic as before)
+// ════════════════════════════════════════
+const CSV_URL='output/vino_prezzi_storico.csv';
+const BC={'LUPO MERAVIGLIA':'#8B2252','GRAN PASSIONE':'#C41E3A','TOR DEL COLLE':'#704214','WRAP AROUND':'#2E8B57','BRILLA!':'#DAA520','BORGO DEL MANDORLO':'#6B8E23','VELARINO':'#4682B4','OMBRE':'#483D8B','BOTTER':'#8B0000','LA DI MOTTE':'#556B2F','LAPILLI':'#CD853F','ZACCAGNINI':'#800020','BARONE MONTALTO':'#B8860B','RICOSSA':'#722F37','CUVAGE':'#C0A060'};
+const ALL_BRANDS=['LUPO MERAVIGLIA','GRAN PASSIONE','TOR DEL COLLE','WRAP AROUND','BRILLA!','BORGO DEL MANDORLO','VELARINO','OMBRE','BOTTER','LA DI MOTTE','LAPILLI','ZACCAGNINI','BARONE MONTALTO','RICOSSA','CUVAGE'];
+let D=[],sortCol='Brand',sortDir=1,priceChart=null;
+
+async function loadData(){try{const r=await fetch(CSV_URL);if(!r.ok)throw new Error('CSV non trovato');const t=await r.text();const p=Papa.parse(t,{header:true,delimiter:';',skipEmptyLines:true});D=p.data.filter(r=>r.Brand&&r['Nome vino']);D.forEach(r=>{r._orig=parseFloat((r['Prezzo originale €']||'0').replace(',','.'));r._sale=parseFloat((r['Prezzo scontato €']||'0').replace(',','.'));r._disc=parseFloat((r['Sconto %']||'0').replace('%','').replace(',','.'));});document.getElementById('loading').style.display='none';document.getElementById('app').style.display='';populateFilters();renderDashboard();renderTable();renderBrands();populateChartFilters();}catch(e){document.getElementById('loading').innerHTML='<div style="color:#c0392b">❌ Errore: '+e.message+'</div>';}}
+
+function populateFilters(){const brands=[...new Set(D.map(r=>r.Brand))].sort();const dates=[...new Set(D.map(r=>r['Data rilevazione']))].sort().reverse();const bf=document.getElementById('brandFilter');brands.forEach(b=>{const o=document.createElement('option');o.value=b;o.textContent=b;bf.appendChild(o)});const df=document.getElementById('dateFilter');dates.forEach(d=>{const o=document.createElement('option');o.value=d;o.textContent=fmtDate(d);df.appendChild(o)});}
+function getFiltered(){const s=document.getElementById('search').value.toLowerCase();const b=document.getElementById('brandFilter').value;const d=document.getElementById('dateFilter').value;return D.filter(r=>{if(b&&r.Brand!==b)return false;if(d&&r['Data rilevazione']!==d)return false;if(s)return(r['Nome vino']||'').toLowerCase().includes(s)||(r.Brand||'').toLowerCase().includes(s);return true;});}
+
+function renderDashboard(){const dates=[...new Set(D.map(r=>r['Data rilevazione']))].sort();const latest=dates[dates.length-1];const ld=D.filter(r=>r['Data rilevazione']===latest);const brands=[...new Set(ld.map(r=>r.Brand))];const promos=ld.filter(r=>r._disc>0);const avgD=promos.length?promos.reduce((s,r)=>s+r._disc,0)/promos.length:0;
+document.getElementById('headerMeta').textContent=ld.length+' prodotti · '+brands.length+' brand · aggiornamento '+fmtDate(latest);
+document.getElementById('kpiGrid').innerHTML=kpi('Prodotti',ld.length,'da '+brands.length+' brand')+kpi('Brand attivi',brands.length,'su '+ALL_BRANDS.length+' target')+kpi('In promozione',promos.length,Math.round(promos.length/Math.max(ld.length,1)*100)+'% del totale')+kpi('Sconto medio promo',avgD.toFixed(1)+'%',promos.length+' prodotti scontati');
+const bm={};ld.forEach(r=>{if(!bm[r.Brand])bm[r.Brand]={n:0,promo:0,td:0};bm[r.Brand].n++;if(r._disc>0){bm[r.Brand].promo++;bm[r.Brand].td+=r._disc}});
+document.getElementById('brandGrid').innerHTML=Object.entries(bm).sort((a,b)=>b[1].n-a[1].n).map(([brand,i])=>{const avg=i.promo?(i.td/i.promo).toFixed(1):0;const c=BC[brand]||'#666';const bs=i.promo?'color:var(--red);background:rgba(192,57,43,.08)':'color:var(--green);background:rgba(74,124,89,.08)';return'<div class="bc"><div class="bc-dot" style="background:'+c+'"></div><div style="flex:1;min-width:0"><div class="bc-name">'+brand+'</div><div class="bc-info">'+i.n+' prodotti · '+i.promo+' in promo'+(i.promo?' · sconto medio '+avg+'%':'')+'</div></div><div class="bc-badge" style="'+bs+'">'+(i.promo?'-'+avg+'%':'Full price')+'</div></div>';}).join('');
+document.getElementById('dateChips').innerHTML=dates.reverse().map(d=>'<div class="chip'+(d===latest?' on':'')+'" onclick="pickDate(\''+d+'\')">'+fmtDate(d)+'</div>').join('');}
+function pickDate(d){document.getElementById('dateFilter').value=d;setView('table',document.querySelectorAll('.tabs button')[2]);renderTable();}
+
+function populateChartFilters(){const brands=[...new Set(D.map(r=>r.Brand))].sort();const cb=document.getElementById('chartBrand');brands.forEach(b=>{const o=document.createElement('option');o.value=b;o.textContent=b;cb.appendChild(o)});}
+function onChartBrandChange(){const brand=document.getElementById('chartBrand').value;const cp=document.getElementById('chartProduct');cp.innerHTML='<option value="">Tutti i prodotti</option>';if(brand){[...new Set(D.filter(r=>r.Brand===brand).map(r=>r['Nome vino']))].sort().forEach(p=>{const o=document.createElement('option');o.value=p;o.textContent=p.length>55?p.substring(0,52)+'...':p;cp.appendChild(o)});}renderChart();}
+function renderChart(){const brand=document.getElementById('chartBrand').value;const product=document.getElementById('chartProduct').value;const metric=document.getElementById('chartMetric').value;const note=document.getElementById('chartNote');const sc=document.getElementById('chartSummaryCard');if(!brand){note.textContent='Seleziona un brand';note.style.display='';sc.style.display='none';if(priceChart){priceChart.destroy();priceChart=null}return;}let filtered=D.filter(r=>r.Brand===brand);if(product)filtered=filtered.filter(r=>r['Nome vino']===product);const dates=[...new Set(filtered.map(r=>r['Data rilevazione']))].sort();if(!dates.length){note.textContent='Nessun dato';note.style.display='';sc.style.display='none';if(priceChart){priceChart.destroy();priceChart=null}return;}note.style.display='none';const pm={};filtered.forEach(r=>{const k=r['Nome vino'];if(!pm[k])pm[k]=[];pm[k].push(r)});const ds=[];const colors=['#6b1d3a','#c0392b','#c9a84c','#4a7c59','#4682B4','#CD853F','#8B2252','#483D8B','#B8860B','#722F37','#2E8B57','#DAA520','#6B8E23','#800020','#556B2F'];let ci=0;for(const[pn,rows]of Object.entries(pm)){if(!product&&(pn.includes('6 bottiglie')||pn.includes('6x')))continue;const c=colors[ci%colors.length];ci++;ds.push({label:pn.length>45?pn.substring(0,42)+'...':pn,data:dates.map(d=>{const r=rows.find(r=>r['Data rilevazione']===d);if(!r)return null;return metric==='sale'?r._sale:metric==='orig'?r._orig:r._disc}),borderColor:c,backgroundColor:c+'20',borderWidth:2,pointRadius:dates.length<15?4:2,pointBackgroundColor:c,tension:.3,fill:ds.length===0,spanGaps:true})}if(priceChart)priceChart.destroy();priceChart=new Chart(document.getElementById('priceChart').getContext('2d'),{type:'line',data:{labels:dates.map(fmtDate),datasets:ds},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom',labels:{font:{size:11,family:'DM Sans'},boxWidth:12,padding:16,usePointStyle:true}},tooltip:{backgroundColor:'#1e1812ee',titleFont:{family:'DM Sans',size:12},bodyFont:{family:'DM Sans',size:11},padding:12,cornerRadius:8,callbacks:{label:ctx=>{const v=ctx.parsed.y;return ctx.dataset.label+': '+(metric==='disc'?v.toFixed(1)+'%':'€ '+v.toFixed(2))}}}},scales:{x:{grid:{display:false},ticks:{font:{size:10,family:'DM Sans'}}},y:{grid:{color:'#f0ece7'},ticks:{font:{size:11,family:'DM Sans'},callback:v=>metric==='disc'?v.toFixed(0)+'%':'€ '+v.toFixed(2)},beginAtZero:metric==='disc'}}}});if(product&&filtered.length>0){sc.style.display='';const lat=filtered.sort((a,b)=>b['Data rilevazione'].localeCompare(a['Data rilevazione']))[0];const mn=Math.min(...filtered.map(r=>r._sale)),mx=Math.max(...filtered.map(r=>r._sale));const av=filtered.reduce((s,r)=>s+r._sale,0)/filtered.length;document.getElementById('chartSummary').innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;font-size:13px">'+sumItem('Prezzo attuale','€ '+lat._sale.toFixed(2))+sumItem('Minimo','€ '+mn.toFixed(2))+sumItem('Massimo','€ '+mx.toFixed(2))+sumItem('Media','€ '+av.toFixed(2))+sumItem('Rilevazioni',filtered.length)+sumItem('Sconto attuale',lat._disc>0?'-'+lat._disc.toFixed(1)+'%':'Nessuno')+'</div>';}else sc.style.display='none';}
+function sumItem(l,v){return'<div><span style="color:var(--slate);font-size:10px;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px">'+l+'</span><strong>'+v+'</strong></div>';}
+
+function renderTable(){const data=getFiltered();data.sort((a,b)=>{let va=a[sortCol]||'',vb=b[sortCol]||'';if(sortCol.includes('originale')){va=a._orig;vb=b._orig}else if(sortCol.includes('scontato')){va=a._sale;vb=b._sale}else if(sortCol==='Sconto %'){va=a._disc;vb=b._disc}return typeof va==='string'?va.localeCompare(vb)*sortDir:(va-vb)*sortDir});document.getElementById('resultCount').textContent=data.length+' risultati';const tb=document.getElementById('tableBody');if(!data.length){tb.innerHTML='<tr><td colspan="8" class="empty">Nessun prodotto trovato</td></tr>';return}tb.innerHTML=data.map(r=>{const c=BC[r.Brand]||'#666';const hd=r._disc>0;return'<tr><td><span class="brand-name"><span class="brand-dot" style="background:'+c+'"></span>'+r.Brand+'</span></td><td>'+(r.Link?'<a class="prod-link" href="'+r.Link+'" target="_blank">'+r['Nome vino']+'</a>':r['Nome vino'])+'</td><td class="ann">'+(r.Annata||'')+'</td><td class="ann">'+(r.Formato||'')+'</td><td class="price">€ '+r._orig.toFixed(2)+'</td><td class="price price-sale'+(hd?' price-disc':'')+'">€ '+r._sale.toFixed(2)+'</td><td>'+(hd?'<span class="badge badge-promo">-'+r._disc.toFixed(1)+'%</span>':'<span class="badge badge-full">–</span>')+'</td><td class="ann">'+fmtDate(r['Data rilevazione'])+'</td></tr>'}).join('');}
+function sortBy(c){if(sortCol===c)sortDir*=-1;else{sortCol=c;sortDir=1}renderTable();}
+
+function renderBrands(){const bwd={};D.forEach(r=>{bwd[r.Brand]=(bwd[r.Brand]||0)+1});const dates=[...new Set(D.map(r=>r['Data rilevazione']))].sort();const lat=D.filter(r=>r['Data rilevazione']===dates[dates.length-1]);const lb={};lat.forEach(r=>{lb[r.Brand]=(lb[r.Brand]||0)+1});document.getElementById('brandManager').innerHTML=ALL_BRANDS.map(b=>{const cnt=lb[b]||0;const tot=bwd[b]||0;const on=cnt>0;const c=BC[b]||'#666';return'<div class="bm-card '+(on?'active':'inactive')+'"><div class="bm-status '+(on?'on':'off')+'"></div><div class="bm-details"><div class="bm-name" style="color:'+c+'">'+b+'</div><div class="bm-count">'+(on?cnt+' prodotti attivi · '+tot+' storico':'Non presente')+'</div></div></div>'}).join('');}
+
+function exportCSV(){const data=getFiltered();const h=['Brand','Nome vino','Annata','Formato','Prezzo originale €','Prezzo scontato €','Sconto %','Data rilevazione','Link'];const csv=[h.join(';'),...data.map(r=>h.map(k=>r[k]||'').join(';'))].join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));a.download='prezzi_export.csv';a.click();}
+
+function setView(v,btn){document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('on'));if(btn)btn.classList.add('on');['Dashboard','Chart','Table','Brands'].forEach(x=>{document.getElementById('view'+x).style.display=v===x.toLowerCase()?'':'none'});if(v==='chart'&&!priceChart)renderChart();}
+function fmtDate(d){if(!d)return'';const p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0]}
+function kpi(l,v,s){return'<div class="kpi"><div class="kpi-lb">'+l+'</div><div class="kpi-v">'+v+'</div><div class="kpi-s">'+s+'</div></div>'}
+
+checkSession();
+</script>
+</body>
+</html>
