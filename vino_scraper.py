@@ -266,6 +266,9 @@ def scrape_page(page, url):
 
 def raw_to_product(rp, brand):
     name = rp["name"]
+    # Filtra multipack/casse (es. "6 bottiglie", "6x0,75")
+    if re.search(r'(\d+\s*(bottigli|x\s*0|×\s*0))', name, re.IGNORECASE):
+        return None
     sale = parse_price(rp["salePrice"])
     orig = parse_price(rp["origPrice"])
     if not sale:
@@ -384,14 +387,22 @@ def run_scraper(brands_filter=None):
 
 # ─── Output ─────────────────────────────────────────────────────
 
+def fmt_price_it(val):
+    """Formatta un prezzo con virgola decimale per Excel italiano: 9.9 → 9,90"""
+    if isinstance(val, (int, float)):
+        return f"{val:.2f}".replace(".", ",")
+    return val
+
 def save_csv(products, filepath):
     with open(filepath, "w", newline="", encoding="utf-8-sig") as f:
         w = csv.DictWriter(f, fieldnames=CSV_HEADERS, delimiter=";")
         w.writeheader()
         for p in products:
             row = {k: p.get(k, "") for k in CSV_HEADERS}
+            row["Prezzo originale €"] = fmt_price_it(row["Prezzo originale €"])
+            row["Prezzo scontato €"] = fmt_price_it(row["Prezzo scontato €"])
             if isinstance(row["Sconto %"], (int, float)):
-                row["Sconto %"] = f"{row['Sconto %']*100:.1f}%"
+                row["Sconto %"] = f"{row['Sconto %']*100:.1f}%".replace(".", ",")
             w.writerow(row)
     print(f"📄 {filepath}")
 
@@ -417,8 +428,10 @@ def append_storico(products):
         if not exists: w.writeheader()
         for p in products:
             row = {k: p.get(k, "") for k in CSV_HEADERS}
+            row["Prezzo originale €"] = fmt_price_it(row["Prezzo originale €"])
+            row["Prezzo scontato €"] = fmt_price_it(row["Prezzo scontato €"])
             if isinstance(row["Sconto %"], (int, float)):
-                row["Sconto %"] = f"{row['Sconto %']*100:.1f}%"
+                row["Sconto %"] = f"{row['Sconto %']*100:.1f}%".replace(".", ",")
             w.writerow(row)
     print(f"📚 {STORICO_FILE}")
 
