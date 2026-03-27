@@ -361,7 +361,7 @@ function renderBrands(){const bwd={};D.forEach(r=>{bwd[r.Brand]=(bwd[r.Brand]||0
 function exportCSV(){const data=getFiltered();const h=['Brand','Nome vino','Annata','Formato','Prezzo originale €','Prezzo scontato €','Sconto %','Data rilevazione','Link'];const csv=[h.join(';'),...data.map(r=>h.map(k=>r[k]||'').join(';'))].join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));a.download='prezzi_export.csv';a.click();}
 
 function setView(v,btn){document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('on'));if(btn)btn.classList.add('on');['Dashboard','Chart','Table','Brands'].forEach(x=>{document.getElementById('view'+x).style.display=v===x.toLowerCase()?'':'none'});if(v==='chart'&&!priceChart)renderChart();}
-function fmtP(v){return fmtP(v).replace(".",",")}
+function fmtP(v){return v.toFixed(2).replace(".",",")}
 function fmtPct(v){return v.toFixed(1).replace(".",",")}
 function fmtDate(d){if(!d)return'';const p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0]}
 function kpi(l,v,s){return'<div class="kpi"><div class="kpi-lb">'+l+'</div><div class="kpi-v">'+v+'</div><div class="kpi-s">'+s+'</div></div>'}
